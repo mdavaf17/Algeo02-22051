@@ -40,17 +40,21 @@ def upload_file():
 	if request.method =='POST':
 		files = request.files.getlist("file[]")
 		infoDir = "success"
+		i = 0
 		try:
-			for file in files:
+			for index, file in enumerate(files, start=1):
 				# path = os.path.dirname(file.filename) Nama dir original saat diupload
 				path = "client-dataset"
 				path2 = os.path.join(app.config['UPLOAD_DIR'], path)
 				if not os.path.exists(path2):
 					os.mkdir(path2)
-				filename = os.path.join(path, secure_filename(os.path.basename(file.filename)))
-				file.save(os.path.join(app.config['UPLOAD_DIR'], filename))
+
+				original_filename, original_extension = os.path.splitext(file.filename)
+				new_filename = f"{index}{original_extension}"
+				full_path = os.path.join(app.config['UPLOAD_DIR'], path, new_filename)
+				file.save(full_path)
 		except Exception as e:
-			infoDir = "failed"
+			infoDir = "something went wrong"
 
 	return render_template('index.html', infoDir=infoDir)
 

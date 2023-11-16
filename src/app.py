@@ -2,6 +2,7 @@ from flask import Flask, flash, request, redirect, url_for, render_template
 import os
 import urllib.request
 from werkzeug.utils import secure_filename
+import src.color
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 UPLOAD_CITRA = '../test/citra/'
@@ -29,6 +30,7 @@ def upload_image():
 	if file and allowed_file(file.filename):
 		filename = secure_filename(file.filename)
 		file.save(os.path.join(app.config['UPLOAD_CITRA'], filename))
+
 		return render_template('index.html', filename=filename)
 	else:
 		flash('Allowed image types are -> png, jpg, jpeg, gif')
@@ -36,7 +38,7 @@ def upload_image():
 
 
 @app.route('/upload/',methods = ['GET','POST'])
-def upload_file():
+def upload_dataset():
 	if request.method =='POST':
 		files = request.files.getlist("file[]")
 		infoDir = "success"

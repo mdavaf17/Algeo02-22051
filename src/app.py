@@ -2,7 +2,7 @@ from flask import Flask, flash, request, redirect, url_for, render_template
 import os
 import urllib.request
 from werkzeug.utils import secure_filename
-import src.color
+from color import *
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 UPLOAD_CITRA = '../test/citra/'
@@ -15,7 +15,26 @@ app.config['UPLOAD_DIR'] = UPLOAD_DIR
 
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-	
+
+
+def get_next_filename(upload_folder):
+    files = os.listdir(upload_folder)
+    file_numbers = []
+
+    for file in files:
+        name, ext = os.path.splitext(file)
+        if ext[1:] in ALLOWED_EXTENSIONS:
+            try:
+                file_numbers.append(int(name))
+            except ValueError:
+                pass
+
+    if not file_numbers:
+        return '0'
+    else:
+        return str(max(file_numbers) + 1)
+
+
 @app.route('/')
 def upload_form():
 	return render_template('index.html')
@@ -29,9 +48,18 @@ def upload_image():
 		return redirect(request.url)
 	if file and allowed_file(file.filename):
 		filename = secure_filename(file.filename)
-		file.save(os.path.join(app.config['UPLOAD_CITRA'], filename))
+		next_filename = get_next_filename(UPLOAD_CITRA)
+		next_filename += os.path.splitext(filename)[1]
+		file.save(os.path.join(UPLOAD_CITRA, f"{next_filename}"))
+		# file.save(os.path.join(app.config['UPLOAD_CITRA'], filename))
+		img = cv2.imread(os.path.join(app.config['UPLOAD_CITRA'],next_filename))
+		img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+		payload = build_vector(split_image(hsv_quantify(rgb_to_hsv(img))))
 
-		return render_template('index.html', filename=filename)
+		res = search(payload)
+		print(res)
+
+		return render_template('index.html', filename=next_filename, result=res)
 	else:
 		flash('Allowed image types are -> png, jpg, jpeg, gif')
 		return redirect(request.url)

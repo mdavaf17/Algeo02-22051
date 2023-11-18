@@ -64,7 +64,8 @@ def entropy(a):
     return (-1) * e
 
 
-def save_csv(dir):
+def save_texture_csv():
+    dir = "../test/dataset"
     filenames = os.listdir(dir)
     sorted_filenames = sorted(filenames, key=lambda x: int(x.split('.')[0]))
 
@@ -79,12 +80,14 @@ def save_csv(dir):
             c, h, e = contrast(symmetric_matrix_normalized), homogeneity(symmetric_matrix_normalized), entropy(symmetric_matrix_normalized)
             images.append([c, h, e])
     
-    with open("../test/db_texture.csv", 'w', newline='') as file:
-        csv_writer = csv.writer(file)
-        csv_writer.writerows(images)
+    try:
+        with open("../test/db_texture.csv", 'w', newline='') as file:
+            csv_writer = csv.writer(file)
+            csv_writer.writerows(images)
+    except Exception as e:
+        print(f"Error: {e}")
 
-
-def load_csv(filename):
+def load_texture_csv(filename):
     lines = ""
     with open(filename, 'r') as file:
         lines = file.readlines()
@@ -103,7 +106,7 @@ def cosine_similarity(c1, h1, e1, c2, h2, e2):
 
 
 def search_texture(c1, h1, e1):
-    db = load_csv("../test/db_texture.csv")
+    db = load_texture_csv("../test/db_texture.csv")
     res60 = {}
     for i in range(len(db)):
         c2, h2, e2 = db[i][0], db[i][1], db[i][2]

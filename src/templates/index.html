@@ -54,7 +54,7 @@
 					<button type="submit" value="Submit" class="btn btn-success">Search</button>
 				</form>
 				{% if result %}
-					<b>{{ result|length }} gambar ditemukan dalam {{ "%.5f"|format(duration) }} seconds </b>
+					<b>{{ result|length }} images found in {{ "%.5f"|format(duration) }} seconds </b>
 				{% endif %}
 			</div>
 		</div>
@@ -77,28 +77,35 @@
 						<div class="carousel-item{% if loop.first %} active{% endif %}">
 							<div class="row justify-content-center">
 								{% for number in chunk[0:5] %}
-									<div class="col-2">
-										<img src="../../test/dataset/{{ number }}.jpg" class="carousel-img" alt="Image">
-										{% if result[number] is defined %}
-											<p>{{ '%.3f'|format(result[number]) }}%</p>
+									{% for f_name in image_data %}
+										{% if f_name.startswith(number|string ~ '.') %}
+											<div class="col-2">
+												<img src="../../test/dataset/{{ f_name }}" class="carousel-img" alt="Image">
+												{% if result[number] is defined %}
+													<p>{{ '%.3f'|format(result[number]) }}%</p>
+												{% endif %}
+											</div>
 										{% endif %}
-									</div>
+									{% endfor %}
 								{% endfor %}
 							</div>
 							<div class="row justify-content-center">
 								{% for number in chunk[5:10] %}
-									<div class="col-2">
-										<img src="../../test/dataset/{{ number }}.jpg" class="carousel-img" alt="Image">
-										{% if result[number] is defined %}
-											<p>{{ '%.3f'|format(result[number]) }}%</p>
+									{% for f_name in image_data %}
+										{% if f_name.startswith(number|string ~ '.') %}
+											<div class="col-2">
+												<img src="../../test/dataset/{{ f_name }}" class="carousel-img" alt="Image">
+												{% if result[number] is defined %}
+													<p>{{ '%.3f'|format(result[number]) }}%</p>
+												{% endif %}
+											</div>
 										{% endif %}
-									</div>
+									{% endfor %}
 								{% endfor %}
 							</div>
 						</div>
 					{% endfor %}
 				</div>
-				<!-- Add carousel controls for navigation -->
 				<a class="carousel-control-prev" href="#carouselExampleFade" role="button" data-slide="prev">
 					<i class="fa-solid fa-circle-chevron-left"></i>
 					<span class="sr-only" aria-hidden="true"></span>
@@ -123,13 +130,10 @@
 	</nav>
 
 
-	{% if infoDir == "success" %}
+	{% if infoDir %}
 		<script>
-			alert('Berhasil mengunggah dataset!');
-		</script>
-	{% elif infoDir == "failed" %}
-		<script>
-			alert('Terjadi kesalahan!');
+			alert("{{ infoDir }}");
+			window.location.href = '/';
 		</script>
 	{% endif %}
 

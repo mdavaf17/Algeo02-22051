@@ -141,14 +141,21 @@ def cosine_similarity(A, B):
     return percent
 
 
-def save_csv(images):
+def save_color_csv():
+    images = loadImages("../test/dataset")
+    for i in range(len(images)):
+        images[i] = build_vector(split_image(hsv_quantify(rgb_to_hsv(images[i]))))
+    
     flattened_arrays = [array.flatten() for array in images]
-    with open("../../test/dataset.csv", 'w', newline='') as file:
-        csv_writer = csv.writer(file)
-        csv_writer.writerows(flattened_arrays)
+    try:
+        with open("../test/db_color.csv", 'w', newline='') as file:
+            csv_writer = csv.writer(file)
+            csv_writer.writerows(flattened_arrays)
+    except Exception as e:
+        print(f"Error: {e}")
 
 
-def load_csv(filename):
+def load_color_csv(filename):
     lines = ""
     with open(filename, 'r') as file:
         lines = file.readlines()
@@ -164,7 +171,7 @@ def load_csv(filename):
 
 
 def search_color(img1):
-    db = load_csv("../test/db_color.csv")
+    db = load_color_csv("../test/db_color.csv")
     res60 = {}
     for i in range(len(db)):
         similarity = cosine_similarity(img1, db[i])
@@ -183,7 +190,7 @@ def search_color(img1):
 
 
 # save_csv(images)
-# db = load_csv("../test/dataset.csv")
+# db = load_color_csv("../test/dataset.csv")
 
 # res = search(images[2])
 

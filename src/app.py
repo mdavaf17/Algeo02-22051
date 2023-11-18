@@ -1,8 +1,10 @@
-from flask import Flask, flash, request, redirect, url_for, render_template
 import os
-import urllib.request
-from werkzeug.utils import secure_filename
+from flask import Flask, flash, request, redirect, url_for, render_template
 from color import *
+from texture import *
+from PIL import Image
+from werkzeug.utils import secure_filename
+import time
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 UPLOAD_CITRA = '../test/citra/'
@@ -36,10 +38,10 @@ def get_next_filename(upload_folder):
 
 
 @app.route('/')
-def upload_form():
+def index():
 	return render_template('index.html')
 
-@app.route('/', methods=['POST'])
+@app.route('/', methods=['GET', 'POST'])
 def upload_image():
 	if 'file' not in request.files:
 		return redirect(request.url)
@@ -52,14 +54,26 @@ def upload_image():
 		next_filename += os.path.splitext(filename)[1]
 		file.save(os.path.join(UPLOAD_CITRA, f"{next_filename}"))
 		# file.save(os.path.join(app.config['UPLOAD_CITRA'], filename))
-		img = cv2.imread(os.path.join(app.config['UPLOAD_CITRA'],next_filename))
-		img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-		payload = build_vector(split_image(hsv_quantify(rgb_to_hsv(img))))
+		startT = time.time()
+		res = ""
+		if request.form.get('texture'):
+			img = Image.open(os.path.join(app.config['UPLOAD_CITRA'], next_filename))
+			framework_matrix = create_framework_matrix(np.array(preprocess_image(img)))
+			symmetric_matrix = framework_matrix + framework_matrix.transpose()
+			symmetric_matrix_normalized = symmetric_matrix / symmetric_matrix.sum()
 
-		res = search(payload)
-		print(res)
+			c, h, e = contrast(symmetric_matrix_normalized), homogeneity(symmetric_matrix_normalized), entropy(symmetric_matrix_normalized)
+			res = search_texture(c, h, e)
+		else:
+			img = cv2.imread(os.path.join(app.config['UPLOAD_CITRA'], next_filename))
+			img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+			payload = build_vector(split_image(hsv_quantify(rgb_to_hsv(img))))
 
-		return render_template('index.html', filename=next_filename, result=res)
+			res = search_color(payload)
+		endT = time.time()
+		duration = endT - startT
+
+		return render_template('index.html', filename=next_filename, result=res, duration=duration)
 	else:
 		flash('Allowed image types are -> png, jpg, jpeg, gif')
 		return redirect(request.url)

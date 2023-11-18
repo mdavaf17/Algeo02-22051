@@ -75,19 +75,28 @@ def hsv_quantify(img):
 
 
 def split_image(img):
-    block_size = ((img.shape[0]) // 4)
-
-    num_blocks_x = img.shape[0] // block_size
-    num_blocks_y = img.shape[1] // block_size
+    block_size_x = img.shape[0] // 4
+    block_size_y = img.shape[1] // 4
 
     blocks = []
 
-    for i in range(num_blocks_x):
-        for j in range(num_blocks_y):
-            block = img[i * block_size: (i + 1) * block_size, j * block_size: (j + 1) * block_size, :]
+    for i in range(4):
+        for j in range(4):
+            # remaining pixels for the last block
+            if i == 3:  # Last row
+                block_x = img.shape[0] - i * block_size_x
+            else:
+                block_x = block_size_x
+            
+            if j == 3:
+                block_y = img.shape[1] - j * block_size_y
+            else:
+                block_y = block_size_y
+
+            block = img[i * block_size_x: i * block_size_x + block_x, j * block_size_y: j * block_size_y + block_y, :]
             blocks.append(block)
 
-    return np.array(blocks)
+    return blocks
 
 
 def build_vector(img):
@@ -154,8 +163,8 @@ def load_csv(filename):
     return arrays
 
 
-def search(img1):
-    db = load_csv("../test/dataset.csv")
+def search_color(img1):
+    db = load_csv("../test/db_color.csv")
     res60 = {}
     for i in range(len(db)):
         similarity = cosine_similarity(img1, db[i])
@@ -174,7 +183,7 @@ def search(img1):
 
 
 # save_csv(images)
-db = load_csv("../test/dataset.csv")
+# db = load_csv("../test/dataset.csv")
 
 # res = search(images[2])
 

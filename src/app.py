@@ -1,12 +1,16 @@
 import os
-from flask import Flask, flash, request, redirect, url_for, render_template
+from flask import Flask, request, redirect, url_for, render_template
 from color import *
 from texture import *
 from PIL import Image
 from werkzeug.utils import secure_filename
 import time
-from time import sleep
 from concurrent.futures import ThreadPoolExecutor
+from bs4 import BeautifulSoup
+import requests
+from urllib.parse import urlparse
+import shutil
+
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 UPLOAD_CITRA = '../test/citra/'
@@ -16,7 +20,7 @@ app = Flask(__name__, static_folder='../test')
 app.secret_key = "secret key"
 app.config['UPLOAD_CITRA'] = UPLOAD_CITRA
 app.config['UPLOAD_DIR'] = UPLOAD_DIR
-executor = ThreadPoolExecutor(2)
+executor = ThreadPoolExecutor(3)
 
 
 def allowed_file(filename):
@@ -54,6 +58,7 @@ def get_image_data():
 def index():
 	return render_template('index.html')
 
+
 @app.route('/', methods=['GET', 'POST'])
 def upload_image():
 	if os.path.exists("../test/db_color.csv") and os.path.exists("../test/db_texture.csv"):
@@ -69,6 +74,8 @@ def upload_image():
 			file.save(os.path.join(UPLOAD_CITRA, f"{next_filename}"))
 			startT = time.time()
 			res = ""
+			isTexture = ""
+
 			if request.form.get('texture'):
 				img = Image.open(os.path.join(app.config['UPLOAD_CITRA'], next_filename))
 				framework_matrix = create_framework_matrix(np.array(preprocess_image(img)))
@@ -83,11 +90,13 @@ def upload_image():
 				payload = build_vector(split_image(hsv_quantify(rgb_to_hsv(img))))
 
 				res = search_color(payload)
+				isTexture = 1
+
+			image_data = get_image_data()
 			endT = time.time()
 			duration = endT - startT
-			image_data = get_image_data()
 
-			return render_template('index.html', filename=next_filename, result=res, duration=duration, image_data=image_data)
+			return render_template('index.html', filename=next_filename, result=res, duration=duration, image_data=image_data, isTexture=isTexture)
 	else:
 		return render_template('index.html', infoDir="Database masih dalam Training atau Dataset belum diupload!")
 
@@ -99,7 +108,6 @@ def upload_dataset():
 		infoDir = "Berhasil mengunggah dataset"
 		try:
 			for index, file in enumerate(files, start=0):
-				# path = os.path.dirname(file.filename) Nama dir original saat diupload
 				path = "dataset"
 				path2 = os.path.join(app.config['UPLOAD_DIR'], path)
 				if not os.path.exists(path2):
@@ -123,6 +131,66 @@ def upload_dataset():
 @app.route('/display/<filename>')
 def display_image(filename):
 	return redirect(url_for('static', filename='citra/' + filename), code=301)
+
+
+def is_valid_image_url(img_url):
+    try:
+        response = requests.head(img_url)
+        return response.status_code == 200 
+    except requests.RequestException:
+        return False
+
+
+def scrape_img(url):
+	r = requests.get(url)
+	soup = BeautifulSoup(r.text, 'html.parser')
+
+	path = "dataset"
+	path2 = os.path.join(app.config['UPLOAD_DIR'], path)
+	if os.path.exists(path2):
+		try:
+			shutil.rmtree(path2)
+		except OSError as e:
+			print(f"Error: {e}")
+
+	if not os.path.exists(path2):
+		os.mkdir(path2)
+
+	counter = 0
+
+	try:	
+		for img in soup.find_all('img'):
+			img_url = img.get('src')
+			if img_url:
+				if not img_url.startswith(('http://', 'https://')):
+					img_url = f"{url.rstrip('/')}/{img_url.lstrip('/')}"
+
+			parsed_url = urlparse(img_url)
+			image_extension = os.path.splitext(parsed_url.path)[1]
+			if image_extension.replace('.', '') in ALLOWED_EXTENSIONS and is_valid_image_url(img_url):
+				try:
+					image_data = requests.get(img_url).content
+					image_name = os.path.join(path2, f"{counter}{image_extension}")
+					with open(image_name, 'wb') as f:
+						print(counter, img_url)
+						f.write(image_data)
+					counter += 1
+				except Exception as e:
+					print(f"Failed to download {img_url}: {e}")
+		
+		executor.submit(save_color_csv)
+		executor.submit(save_texture_csv)
+	except:
+		pass
+
+
+@app.route('/scrape/', methods = ['POST'])
+def job_scraper():
+	if request.method == 'POST':
+		url = request.form['site_url']
+		executor.submit(scrape_img, url)
+	
+	return render_template('index.html')
 
 if __name__ == "__main__":
     app.run(debug=True)

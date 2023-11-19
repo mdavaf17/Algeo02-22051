@@ -290,5 +290,15 @@ def download():
         return "Number parameter missing or invalid"
 
 
+@app.route('/how.html')
+def how_page():
+    return render_template('how.html')
+
+
+@app.route('/about.html')
+def about_page():
+    return render_template('about.html')
+
+
 if __name__ == "__main__":
     app.run(debug=True)

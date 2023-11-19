@@ -1,7 +1,5 @@
 import numpy as np
 from PIL import Image, ImageOps
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 import math
 import os
 import csv

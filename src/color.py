@@ -1,10 +1,8 @@
 import os
-import sys
 import cv2
 import numpy as np
 from numpy.linalg import norm
 import csv
-import PIL
 
 def loadImages(dir):
     filenames = os.listdir(dir)

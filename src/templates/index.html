@@ -32,7 +32,7 @@
 					</div>
 				{% else %}
 					<div class="bd-example mx-auto w-75">
-						<svg class="bd-placeholder-img bd-placeholder-img-lg img-fluid" width="100%" height="250" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" focusable="false" role="img" aria-label="Placeholder: Responsive image"><title>Placeholder</title>
+						<svg class="bd-placeholder-img bd-placeholder-img-lg img-fluid" width="100%" height="250" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" focusable="false" role="img" aria-label="Placeholder: Responsive image"><title>Blank Image</title>
 						<rect width="100%" height="100%" fill="#868e96"></rect>
 						</svg>
 				</div>
@@ -59,6 +59,10 @@
 				</form>
 				{% if result %}
 					<b>{{ result|length }} images found in {{ "%.5f"|format(duration) }} seconds </b>
+				{% else %}
+					{% if duration %}
+						<b>0 images found in {{ "%.5f"|format(duration) }} seconds </b>
+					{% endif %}
 				{% endif %}
 			</div>
 		</div>

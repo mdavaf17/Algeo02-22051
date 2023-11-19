@@ -139,6 +139,9 @@ def distortion(a: np.array) -> float:
 
 
 def save_texture_csv():
+    if os.path.exists("../test/db_texture.csv"):
+        os.remove("../test/db_texture.csv")
+
     dir = "../test/dataset"
     filenames = os.listdir(dir)
     sorted_filenames = sorted(filenames, key=lambda x: int(x.split('.')[0]))
@@ -171,6 +174,7 @@ def load_texture_csv(filename):
     for line in lines:
         values = list(map(float, line.strip().split(',')))
         arrays.append(values)
+        
     return arrays
 
 
@@ -186,7 +190,7 @@ def search_texture(c1, h1, e1, d1, asm1, en1, co1, ic1, dt1):
     for i in range(len(db)):
         c2, h2, e2, d2, asm2, en2, co2, ic2, dt2 = db[i][0], db[i][1], db[i][2], db[i][3], db[i][4], db[i][5], db[i][6], db[i][7], db[i][8]
         similarity = cosine_similarity_texture(c1, h1, e1, d1, asm1, en1, co1, ic1, dt1, c2, h2, e2, d2, asm2, en2, co2, ic2, dt2)
-        if similarity >= 60:
+        if similarity > 60:
             res60[i] = similarity
 
     sorted_res = dict(sorted(res60.items(), key=lambda item: item[1], reverse=True))

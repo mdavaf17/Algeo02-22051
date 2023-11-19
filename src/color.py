@@ -82,8 +82,7 @@ def split_image(img):
 
     for i in range(4):
         for j in range(4):
-            # remaining pixels for the last block
-            if i == 3:  # Last row
+            if i == 3:
                 block_x = img.shape[0] - i * block_size_x
             else:
                 block_x = block_size_x
@@ -131,17 +130,21 @@ def cosine_similarity_color(A, B):
 
     for i in range(A.shape[0]):
         if (i == 5 or i == 6 or i == 9 or i == 10):
-            cosine += (1.25*(np.dot(A[i],B[i]) / (norm(A[i])*norm(B[i]))))
+            cosine += (2*(np.dot(A[i],B[i]) / (norm(A[i])*norm(B[i]))))
+            # cosine += (1.5*(np.dot(A[i],B[i]) / (norm(A[i])*norm(B[i]))))
         else:
             cosine += (np.dot(A[i],B[i]) / (norm(A[i])*norm(B[i])))
 
         # cosine += (np.dot(A[i],B[i]) / (norm(A[i])*norm(B[i])))
 
-    percent = ((1 + (cosine / 17))/2) * 100
+    percent = (cosine / 20) * 100
+    # percent = (cosine / 18) * 100
     return percent
 
 
 def save_color_csv():
+    if os.path.exists("../test/db_color.csv"):
+        os.remove("../test/db_color.csv")
     images = loadImages("../test/dataset")
     for i in range(len(images)):
         images[i] = build_vector(split_image(hsv_quantify(rgb_to_hsv(images[i]))))
@@ -160,11 +163,9 @@ def load_color_csv(filename):
     with open(filename, 'r') as file:
         lines = file.readlines()
 
-    # Process each line to convert it into a NumPy array of shape (16, 72)
     arrays = []
     for line in lines:
         values = list(map(int, line.strip().split(',')))
-        # Reshape the values into arrays of shape (16, 72)
         array = np.array(values).reshape(16, 72)
         arrays.append(array)
     return arrays
@@ -175,24 +176,8 @@ def search_color(img1):
     res60 = {}
     for i in range(len(db)):
         similarity = cosine_similarity_color(img1, db[i])
-        if similarity >= 60:
+        if similarity > 60:
             res60[i] = similarity
     
     sorted_res = dict(sorted(res60.items(), key=lambda item: item[1], reverse=True))
     return sorted_res
-
-
-
-# images = loadImages("../test/dataset")
-
-# for i in range(len(images)):
-#     images[i] = build_vector(split_image(hsv_quantify(rgb_to_hsv(images[i]))))
-
-
-# save_csv(images)
-# db = load_color_csv("../test/dataset.csv")
-
-# res = search(images[2])
-
-# for number in res:
-#     file_path = "../test/dataset/" + str(number) + ".jpg"  

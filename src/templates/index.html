@@ -133,6 +133,16 @@
 				</div>
 			</form>
 			
+			{% if filename %}
+				<form action='/report' method="GET" class="form-inline mx-auto">
+					<input type="hidden" name="number" value="{{ filename.split('.')[0] }}">
+					<div class="input-group">
+						<button type="submit" class="btn btn-secondary" style="transform: translateX(-50%);">Download</button>
+					</div>
+				</form>
+			{% endif %}
+
+			
 
 			<form action='/upload/' method="POST" enctype="multipart/form-data" class="float-end">
 				<label for="imageUpload" class="btn btn-primary">Upload Dataset</label>

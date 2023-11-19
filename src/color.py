@@ -124,7 +124,7 @@ def build_vector(img):
     return block_frequency_vectors_array
 
 
-def cosine_similarity(A, B):
+def cosine_similarity_color(A, B):
     A = A.astype(np.int64)
     B = B.astype(np.int64)
     cosine = 0
@@ -174,7 +174,7 @@ def search_color(img1):
     db = load_color_csv("../test/db_color.csv")
     res60 = {}
     for i in range(len(db)):
-        similarity = cosine_similarity(img1, db[i])
+        similarity = cosine_similarity_color(img1, db[i])
         if similarity >= 60:
             res60[i] = similarity
     
